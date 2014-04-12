@@ -58,6 +58,10 @@ class ModularPost {
 	 * add_static_content
 	 *
 	 * Add static content to a post.
+	 *
+	 * @param string $title The title of the static content block.
+	 * @param string $content The HTML content of the static content block.
+	 * @param string $layout One of 'center', 'full', 'left', or 'right'.
 	 */
 	function add_static_content( $title, $content, $layout = 'center' ) { 
 
@@ -81,7 +85,11 @@ class ModularPost {
 	/**
 	 * add_image
 	 *
-	 * Add a highlighted image to a post.
+	 * Add a highlighted image to a post. The image will be sideloaded into the
+	 * WordPress media library; however, it will not be attached to the post.
+	 * 
+	 * @param string $url The remote location of the image file.
+	 * @param string $layout One of 'center', 'full', 'left', or 'right'.
 	 */
 	function add_image( $url, $layout = 'center' ){
 
@@ -121,9 +129,11 @@ class ModularPost {
 	/**
 	 * add_carousel
 	 *
-	 * Add a nav carousel to a post. As carousels are always full width and the
-	 * plugin assumes that the user intends to make a carousel of post children
-	 * (rather than create a nav menu), there are no parameters.
+	 * Add a nav carousel to a post. 
+	 *
+	 * Carousels are always full width and the plugin assumes that the user
+	 * intends to make a carousel of post children (rather than create a nav 
+	 * menu), so there are no parameters.
 	 */
 	function add_carousel() {
 
@@ -158,8 +168,11 @@ class ModularPost {
 	 * publish
 	 *
 	 * Publishes new post and associated modules
+	 *
+	 * @param int $parent_id Wordpress ID of the post this should be nested under.
+	 * @param string $post_status The status of the new post, i.e. 'draft' or 'private' or 'publish'
 	 */
-	function publish() {
+	function publish( $parent_id = null, $post_status = 'publish' ) {
 
 		global $wpdb;
 
@@ -169,27 +182,37 @@ class ModularPost {
 			'post_status' => 'publish',
 		);
 
-		$new_id = wp_insert_post( $postdata );
+		// Add parent ID if specified
+		if( $parent_id ) {
+			$postdata[ 'post_parent' ] = $parent_id;
+		}
 
+		$new_id = wp_insert_post( $postdata );
 		if( ! $new_id ) {
 			die( 'Failed to insert post.' );
 		}
 
+		// Add template if specified
 		if( 'page' == $this->post_type && $this->post_template ) {
 			update_post_meta( $new_id, '_wp_page_template', $this->post_template );
 		}
 
+		// ACF gives every modular page a 'modules' key that corresponds to a list
+		// of included modules types (or in ACF terms, layouts) in the order they
+		// appear on the page.
 		update_post_meta( $new_id, 'modules', $this->module_list );
 		update_post_meta( $new_id, '_modules', 'field_524b16d70ce72' );
 
+		// Loop through the modules, adding postmeta in the same format ACF would.
 		foreach( $this->module_data as $module ) {
-
 			foreach( $module as $key => $value ) {
-
 				update_post_meta( $new_id, $key, $value );
-
 			}
+		}
 
+		// Loop through and publish children
+		foreach( $this->children as $child_this ) {
+			$child_this->publish( $new_id );
 		}
 
 		return $new_id;
@@ -197,7 +220,7 @@ class ModularPost {
 	}
 
 	/**
-	 * Construct
+	 * Set up object
 	 */
 	function __construct( $post_title, $post_type = 'page', $post_template = 'treatment.php' ) {
 
