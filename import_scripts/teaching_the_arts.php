@@ -1,12 +1,12 @@
 <?php
 
-	$post = new ModularPost( 'My parent post' );
-	$post->add_static_content( 'I am a parent post', "<ul><li>Here</li><li>is an unordered list.</li></ul>", 'left' );
-
-	$child_post = new ModularPost( 'My child post' );
-	$child_post->add_static_content( 'I am a child post', "<p>Howdy</p>", 'left' );
-
-	$post->add_child( $child_post );
+	$post = new ModularPost( 'My image post' );
+	$post->add_image( 
+		'http://media-cache-ak0.pinimg.com/736x/3a/e9/b8/3ae9b8aa242753ae30dce8a775d5745e.jpg',
+		'Image Caption',
+		'Image Alt',
+		'full'
+	);
 
 	$new_id = $post->publish();
 

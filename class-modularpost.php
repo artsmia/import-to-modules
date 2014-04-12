@@ -86,12 +86,14 @@ class ModularPost {
 	 * add_image
 	 *
 	 * Add a highlighted image to a post. The image will be sideloaded into the
-	 * WordPress media library; however, it will not be attached to the post.
+	 * WordPress media library; however, it will not be attached to the new post.
 	 * 
 	 * @param string $url The remote location of the image file.
+	 * @param string $caption The caption text, typically displayed beneath the image.
+	 * @param string $alt Alt text for the image
 	 * @param string $layout One of 'center', 'full', 'left', or 'right'.
 	 */
-	function add_image( $url, $layout = 'center' ){
+	function add_image( $url, $caption = '', $alt = '', $layout = 'center' ){
 
 		$i = $this->get_mod_index();
 
@@ -105,12 +107,22 @@ class ModularPost {
 		if ( is_wp_error( $tmp ) ) {
 		  @unlink( $file_array[ 'tmp_name' ] );
 		}
+
+		// Include caption if specified (WP stores this in the post_excerpt field)
+		$post_data = array(
+			'post_excerpt' => $caption,
+		);
 		
-		$media_id = media_handle_sideload( $file_array, 0 );
+		$media_id = media_handle_sideload( $file_array, 0, null, $post_data );
 		
 		// Check for handle sideload errors.
 		if ( is_wp_error( $media_id ) ) {
 		  @unlink( $file_array['tmp_name'] );
+		}
+
+		// Add alt text if specified.
+		if( $alt ) {
+			update_post_meta( $media_id, '_wp_attachment_image_alt', $alt );
 		}
 
 		$this->module_list[] = 'image';
