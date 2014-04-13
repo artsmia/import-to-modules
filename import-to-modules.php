@@ -7,7 +7,15 @@
  * Author URI: http://new.artsmia.org
  */
 
+// Main plugin class
 include( 'class-importtomodules.php' );
+
+// Modular post creation API
 include( 'class-modularpost.php' );
+
+// Individual modules
+foreach( glob( plugin_dir_path( __FILE__ ) . "modules/*.php" ) as $path ) {
+	include_once( $path );
+}
 
 new ImportToModules();

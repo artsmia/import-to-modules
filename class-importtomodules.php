@@ -7,7 +7,6 @@
  */
 class ImportToModules {
 
-
 	/**
 	 * Register plugin page under tools menu
 	 */
@@ -23,7 +22,6 @@ class ImportToModules {
     );
 
 	}
-
 
 	/**
 	 * Render plugin page
@@ -70,7 +68,6 @@ class ImportToModules {
   <?php
 	}
 
-
 	/**
 	 * Include and run selected import script
 	 */
@@ -84,7 +81,6 @@ class ImportToModules {
 		die;
 
 	}
-
 
 	/**
 	 * Set up plugin

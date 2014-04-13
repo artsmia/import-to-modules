@@ -1,4 +1,4 @@
-<?php
+	<?php
 
 /**
  * ModularPost
@@ -39,16 +39,11 @@ class ModularPost {
 	private $module_list = array();
 
 	/**
-	 * Data corresponding to each module.
-	 */
-	private $module_data = array();
-
-	/**
 	 * Get mod index
 	 *
 	 * Return current index and increment
 	 */
-	function get_mod_index() {
+	function get_next_mod_index() {
 		$index = $this->mod_index;
 		$this->mod_index++;
 		return $index;
@@ -57,110 +52,65 @@ class ModularPost {
 	/**
 	 * add_static_content
 	 *
-	 * Add static content to a post.
+	 * Add static content to a post. Wraps the I2M_Module__static object.
+	 *
+	 * External images will be downloaded and stored in the WP media library, and
+	 * will be attached to the newly created post.
 	 *
 	 * @param string $title The title of the static content block.
 	 * @param string $content The HTML content of the static content block.
-	 * @param string $layout One of 'center', 'full', 'left', or 'right'.
+	 * @param string $position One of 'center', 'full', 'left', or 'right'.
 	 */
-	function add_static_content( $title, $content, $layout = 'center' ) { 
+	function add_static_content( $title = null, $content = null, $position = null ) { 
 
-		$i = $this->get_mod_index();
+		$module = new I2M_Module__static( $title, $content, $position );
 
-		$this->module_list[] = 'static';
+		$this->module_list[] = $module->get_acf_layout();
+		$this->modules[] = $module;
 
-		$this->module_data[] = array(
-			 'modules_' . $i . '_layout' => $layout,
-			'_modules_' . $i . '_layout' => 'field_524b1fdf186a1',
-			 'modules_' . $i . '_content' => 1,
-			'_modules_' . $i . '_content' => 'field_524b1a80ffd07',
-			 'modules_' . $i . '_content_0_title' => $title,
-			'_modules_' . $i . '_content_0_title' => 'field_524b1e68d452c',
-			 'modules_' . $i . '_content_0_text' => $content,
-			'_modules_' . $i . '_content_0_text' => 'field_524b1e4bd452b',
-		);
+		return $module;
 
 	}
 
 	/**
 	 * add_image
 	 *
-	 * Add a highlighted image to a post. The image will be sideloaded into the
-	 * WordPress media library; however, it will not be attached to the new post.
+	 * Add a highlighted image to a post. Wraps the I2M_Module__image object.
 	 * 
 	 * @param string $url The remote location of the image file.
 	 * @param string $caption The caption text, typically displayed beneath the image.
 	 * @param string $alt Alt text for the image
-	 * @param string $layout One of 'center', 'full', 'left', or 'right'.
+	 * @param string $position One of 'center', 'full', 'left', or 'right'.
 	 */
-	function add_image( $url, $caption = '', $alt = '', $layout = 'center' ){
+	function add_image( $url = null, $caption = null, $alt = null, $position = null ) {
 
-		$i = $this->get_mod_index();
+		$module = new I2M_Module__image( $url, $caption, $alt, $position );
 
-		$tmp = download_url( $url );
-		$file_array = array(
-		  'name' => basename( $url ),
-		  'tmp_name' => $tmp
-		);
-		
-		// Check for download errors
-		if ( is_wp_error( $tmp ) ) {
-		  @unlink( $file_array[ 'tmp_name' ] );
-		}
+		$this->module_list[] = $module->get_acf_layout();
+		$this->modules[] = $module;
 
-		// Include caption if specified (WP stores this in the post_excerpt field)
-		$post_data = array(
-			'post_excerpt' => $caption,
-		);
-		
-		$media_id = media_handle_sideload( $file_array, 0, null, $post_data );
-		
-		// Check for handle sideload errors.
-		if ( is_wp_error( $media_id ) ) {
-		  @unlink( $file_array['tmp_name'] );
-		}
-
-		// Add alt text if specified.
-		if( $alt ) {
-			update_post_meta( $media_id, '_wp_attachment_image_alt', $alt );
-		}
-
-		$this->module_list[] = 'image';
-
-		$this->module_data[] = array(
-			 'modules_' . $i . '_layout' => $layout,
-			'_modules_' . $i . '_layout' => 'field_524b1adeffd0b',
-			 'modules_' . $i . '_content' => 1,
-			'_modules_' . $i . '_content' => 'field_524b1abaffd0a',
-			 'modules_' . $i . '_content_0_image' => $media_id,
-			'_modules_' . $i . '_content_0_image' => 'field_524b39cf34532',
-		);
+		return $module;
 
 	}
 
 	/**
 	 * add_carousel
 	 *
-	 * Add a nav carousel to a post. 
+	 * Add a nav carousel to a post. Wraps the I2M_Module__carousel object.
 	 *
 	 * Carousels are always full width and the plugin assumes that the user
-	 * intends to make a carousel of post children (rather than create a nav 
-	 * menu), so there are no parameters.
+	 * intends to make a carousel of post children rather than create a nav 
+	 * menu, so there are no parameters.
 	 */
 	function add_carousel() {
 
-		$i = $this->get_mod_index();
+		$module = new I2M_Module__carousel();
 
-		$this->module_list[] = 'carousel';
+		$this->module_list[] = $module->get_acf_layout();
+		$this->modules[] = $module;
 
-		$this->module_data[] = array(
-			 'modules_' . $i . '_layout' => 'full',
-			'_modules_' . $i . '_layout' => 'field_52b8b3e1cfd98',
-			 'modules_' . $i . '_content' => 1,
-			'_modules_' . $i . '_content' => 'field_52b61e566d52d',
-			 'modules_' . $i . '_content_0_source' => 'children',
-			'_modules_' . $i . '_content_0_source' => 'field_534851493c28e',
-		);
+		return $module;
+
 	}
 
 	/**
@@ -199,6 +149,7 @@ class ModularPost {
 			$postdata[ 'post_parent' ] = $parent_id;
 		}
 
+		// Create post
 		$new_id = wp_insert_post( $postdata );
 		if( ! $new_id ) {
 			die( 'Failed to insert post.' );
@@ -216,15 +167,24 @@ class ModularPost {
 		update_post_meta( $new_id, '_modules', 'field_524b16d70ce72' );
 
 		// Loop through the modules, adding postmeta in the same format ACF would.
-		foreach( $this->module_data as $module ) {
-			foreach( $module as $key => $value ) {
+		foreach( $this->modules as $index=>$module ) {
+
+			// Do any necessary setup (i.e. download images)
+			$module->before_publish( $new_id );
+
+			// Fetch postmeta for module
+			$postmeta_rows = $module->get_postmeta_rows( $index );
+
+			// Update in database
+			foreach( $postmeta_rows as $key => $value ) {
 				update_post_meta( $new_id, $key, $value );
 			}
+
 		}
 
 		// Loop through and publish children
-		foreach( $this->children as $child_this ) {
-			$child_this->publish( $new_id );
+		foreach( $this->children as $child ) {
+			$child->publish( $new_id );
 		}
 
 		return $new_id;
@@ -234,7 +194,7 @@ class ModularPost {
 	/**
 	 * Set up object
 	 */
-	function __construct( $post_title, $post_type = 'page', $post_template = 'treatment.php' ) {
+	function __construct( $post_title = null, $post_type = 'page', $post_template = 'treatment.php' ) {
 
 		$this->post_title = $post_title;
 		$this->post_type = $post_type;

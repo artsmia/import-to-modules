@@ -1,12 +1,10 @@
 <?php
 
-	$post = new ModularPost( 'My image post' );
-	$post->add_image( 
-		'http://media-cache-ak0.pinimg.com/736x/3a/e9/b8/3ae9b8aa242753ae30dce8a775d5745e.jpg',
-		'Image Caption',
-		'Image Alt',
-		'full'
-	);
+	$post = new ModularPost( 'My classy post' );
+	$image = $post->add_image();
+	$image->url = 'http://media-cache-ak0.pinimg.com/736x/3a/e9/b8/3ae9b8aa242753ae30dce8a775d5745e.jpg';
+	$image->caption ='Image Caption';
+	$image->alt = 'Image Alt';
 
 	$new_id = $post->publish();
 
