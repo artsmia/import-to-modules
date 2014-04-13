@@ -43,7 +43,7 @@ class ImportToModules {
 
 		<input type='button' class='button button-primary' id='i2m_submit' value='Go!' />
 
-		<p style='background-color:#fff; color:#555; padding:25px; box-sizing:border-box; display:none;' id='ajax-response'></p>
+		<div style='background-color:#fff; color:#555; padding:15px 25px; box-sizing:border-box; margin-top:25px; display:none;' id='ajax-response'></div>
 
 		<script type='text/javascript'>
 		jQuery( document ).ready( function() {
