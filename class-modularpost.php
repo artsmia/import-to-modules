@@ -59,7 +59,7 @@ class ModularPost {
 	 *
 	 * @param string $title The title of the static content block.
 	 * @param string $content The HTML content of the static content block.
-	 * @param string $position One of 'center', 'full', 'left', or 'right'.
+	 * @param string $position One of 'center', 'full', 'left', or 'right'
 	 */
 	function add_static_content( $title = null, $content = null, $position = null ) { 
 
@@ -80,11 +80,31 @@ class ModularPost {
 	 * @param string $url The remote location of the image file.
 	 * @param string $caption The caption text, typically displayed beneath the image.
 	 * @param string $alt Alt text for the image
-	 * @param string $position One of 'center', 'full', 'left', or 'right'.
+	 * @param string $position One of 'center', 'full', 'left', or 'right'
 	 */
 	function add_image( $url = null, $caption = null, $alt = null, $position = null ) {
 
 		$module = new I2M_Module__image( $url, $caption, $alt, $position );
+
+		$this->module_list[] = $module->get_acf_layout();
+		$this->modules[] = $module;
+
+		return $module;
+
+	}
+
+	/**
+	 * add_slideshow
+	 *
+	 * Add a slideshow to a post. Wraps the I2M_Module__slideshow object.
+	 *
+	 * @param array $slides An array of slide arrays
+	 * @param array $options An array of options
+	 * @param string $position One of 'center', 'full', 'left', or 'right'
+	 */
+	function add_slideshow( $slides = null, $options = null, $position = null ) {
+
+		$module = new I2M_Module__slideshow( $slides, $options, $position );
 
 		$this->module_list[] = $module->get_acf_layout();
 		$this->modules[] = $module;

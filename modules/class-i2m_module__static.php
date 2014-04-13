@@ -46,6 +46,4 @@ class I2M_Module__static extends I2M_Module {
 
 	}
 
-
-
 }
