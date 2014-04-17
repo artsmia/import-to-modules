@@ -35,11 +35,11 @@ class I2M_Module__static extends I2M_Module {
 	/**
 	 * Set up object.
 	 */
-	public function __construct( $title = null, $content = null, $position = 'center' ) {
+	public function __construct( $title = null, $content = null, $position = null ) {
 
 		$this->acf_layout = 'static';
 
-		$this->position = $position;
+		$this->position = $position ? $position : 'center';
 
 		$this->title = $title;
 		$this->content = $content;

@@ -23,6 +23,11 @@ class ModularPost {
 	private $post_template;
 
 	/**
+	 * The module containing the featured image for the page.
+	 */
+	private $featured_image;
+
+	/**
 	 * Array holding other ModularPosts that are children of this one.
 	 */
 	private $children = array();
@@ -118,15 +123,15 @@ class ModularPost {
 	 *
 	 * Add a nav carousel to a post. Wraps the I2M_Module__carousel object.
 	 *
-	 * Carousels are always full width and the plugin assumes that the user
-	 * intends to make a carousel of post children rather than create a nav 
-	 * menu, so there are no parameters.
+	 * Note: position is always 'full'
+	 *
+	 * @param string $source Source of posts: 'children' or 'inherit'. Navs are not supported at this time.
 	 */
-	function add_carousel() {
+	function add_carousel( $source = null ) {
 
-		$module = new I2M_Module__carousel();
+		$module = new I2M_Module__carousel( $source );
 
-		$this->module_list[] = $module->get_acf_layout();
+		$this->module_list[] = $module->get_acf_layout( $source );
 		$this->modules[] = $module;
 
 		return $module;
@@ -142,10 +147,22 @@ class ModularPost {
 	 */
 	function add_child( $child ) {
 		if( $child instanceof ModularPost ) {
-			$this->children[] = &$child;
+			$this->children[] = $child;
 		}
 	}
 
+	/**
+	 * set_featured_image
+	 *
+	 * Sets the featured image for the post. 
+	 *
+	 * @param object $image_module The I2M_Module__image module containing the image
+	 */
+	function set_featured_image( $image_module = null ) {
+		if( $image_module && $image_module instanceof I2M_Module__image ) {
+			$this->featured_image = $image_module;
+		}
+	}
 	/**
 	 * publish
 	 *
@@ -200,6 +217,11 @@ class ModularPost {
 				update_post_meta( $new_id, $key, $value );
 			}
 
+		}
+
+		if( ! empty( $this->featured_image ) ) {
+			$thumbnail_id = $this->featured_image->get_media_id();
+			update_post_meta( $new_id, '_thumbnail_id', $thumbnail_id );
 		}
 
 		// Loop through and publish children

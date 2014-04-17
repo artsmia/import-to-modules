@@ -16,6 +16,13 @@ class I2M_Module__image extends I2M_Module {
 	private $media_id;
 
 	/**
+	 * Get media ID
+	 */
+	public function get_media_id() {
+		return isset( $this->media_id ) ? $this->media_id : null;
+	}
+
+	/**
 	 * before_publish
 	 *
 	 * Called just before get_postmeta_rows. Here, used to sideload

@@ -171,15 +171,15 @@ class I2M_Module__slideshow extends I2M_Module {
 	/**
 	 * Set up object.
 	 */
-	public function __construct( $slides = array(), $options = null, $position = 'full' ) {
+	public function __construct( $slides = null, $options = null, $position = null ) {
 
 		$this->acf_layout = 'slideshow';
 
-		$this->position = $position;
+		$this->position = $position ? $position : 'full';
 
-		$this->slides = $slides;
+		$this->slides = $slides ? $slides : array();
 
-		if( $options ) {
+		if( ! empty( $options ) ) {
 			$this->options = array_merge( $this->options, $options );
 		}
 
