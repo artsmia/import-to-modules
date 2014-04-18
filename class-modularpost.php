@@ -28,6 +28,11 @@ class ModularPost {
 	private $featured_image;
 
 	/**
+	 * Whether this post is a subsite root.
+	 */
+	private $is_subsite_root = false;
+
+	/**
 	 * Array holding other ModularPosts that are children of this one.
 	 */
 	private $children = array();
@@ -163,6 +168,19 @@ class ModularPost {
 			$this->featured_image = $image_module;
 		}
 	}
+
+	/**
+	 * set_subsite_root
+	 *
+	 * Sets this post as the subsite root. If set, headers on child posts will inherit the title of this post.
+	 *
+	 * @param object $image_module The I2M_Module__image module containing the image
+	 */
+	function set_subsite_root() {
+		$this->is_subsite_root = true;
+	}
+
+
 	/**
 	 * publish
 	 *
@@ -195,6 +213,11 @@ class ModularPost {
 		// Add template if specified
 		if( 'page' == $this->post_type && $this->post_template ) {
 			update_post_meta( $new_id, '_wp_page_template', $this->post_template );
+		}
+
+		// Add subsite root if specified
+		if( $this->is_subsite_root ) {
+			update_post_meta( $new_id, 'subsite_root', 1 );
 		}
 
 		// ACF gives every modular page a 'modules' key that corresponds to a list
