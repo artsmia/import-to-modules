@@ -62,6 +62,10 @@ foreach( $results as $row ){
 
 		case '5facts':
 
+			if( $row['volume'] !== 1 ){
+				break;
+			}
+
 			$format = 'Five Facts';
 
 			// Root post
@@ -186,6 +190,9 @@ foreach( $results as $row ){
 
 		case 'objif':
 
+			if( $row['volume'] !== 1 ){
+				break;
+			}
 			$format = 'Object in Focus';
 
 			// Root post

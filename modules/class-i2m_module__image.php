@@ -15,7 +15,7 @@ class I2M_Module__image extends I2M_Module {
 
 	private $media_id;
 
-	private $fallback_id = 29824;
+	private $fallback_id = 32740;
 
 	/**
 	 * Get media ID

@@ -11,7 +11,7 @@ class I2M_Module__slideshow extends I2M_Module {
 
 	public $slides;
 
-	private $fallback_id = 29824;
+	private $fallback_id = 32740;
 
 	/**
 	 * Get media ID
