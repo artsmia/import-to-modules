@@ -62,18 +62,14 @@ foreach( $results as $row ){
 
 		case '5facts':
 
-			if( $row['volume'] !== 1 ){
-				break;
-			}
-
 			$format = 'Five Facts';
 
 			// Root post
 			$mainpost = new ModularPost( array(
-				'post_title' => 'Teaching the Arts: Five Facts: ' . $row['title'],
-				'post_name' => $row['title'],
+				'post_title' => 'Teaching the Arts: Five Facts: ' . utf8_encode( $row['title'] ),
+				'post_name' => utf8_encode( $row['title'] ),
 				'post_type' => 'tta',
-				'post_excerpt' => $row['introduction'],
+				'post_excerpt' => utf8_encode( $row['introduction'] ),
 				'menu_order' => $row['volume'],
 			) );
 
@@ -84,17 +80,17 @@ foreach( $results as $row ){
 			$mainpost->add_carousel( 'children' );
 
 			// Title
-			$mainpost->add_static_content( '', '<h1>' . $row['title'] . '</h1>', 'full' );
+			$mainpost->add_static_content( '', '<h1>' . utf8_encode( $row['title'] ) . '</h1>', 'full' );
 
 			// Main content
-			$mainpost->add_static_content( '', $row['introduction'] );
+			$mainpost->add_static_content( '', utf8_encode( $row['introduction'] ) );
 
 			// Subpages
 			for( $i=1; $i<6; $i++ ) {
 
 				$child = new ModularPost( array(
-					'post_title' => '<span>FACT #' . $i . ':</span> ' . $row['page' . $i . '_title'],
-					'post_name' => $row['page' . $i . '_title'],
+					'post_title' => '<span>FACT #' . $i . ':</span> ' . utf8_encode( $row['page' . $i . '_title'] ),
+					'post_name' => utf8_encode( $row['page' . $i . '_title'] ),
 					'post_type' => 'tta' 
 				) );
 
@@ -102,15 +98,15 @@ foreach( $results as $row ){
 				$child->add_carousel( 'inherit' );
 
 				// Page title
-				$child->add_static_content( '', '<h1>FACT #' . $i . ': ' . $row['page' . $i . '_title'] . '</h1>', 'full' );
+				$child->add_static_content( '', '<h1>FACT #' . $i . ': ' . utf8_encode( $row['page' . $i . '_title'] ) . '</h1>', 'full' );
 
 				// Main image
-				$child_featured = $child->add_image( fix_source( $row['page' . $i . '_pic'] ), $row['page' . $i . '_cap'], null, 'left' );
+				$child_featured = $child->add_image( fix_source( $row['page' . $i . '_pic'] ), utf8_encode( $row['page' . $i . '_cap'] ), null, 'left' );
 				// Now that we've created the image module, save as featured image
 				$child->set_featured_image( $child_featured );
 
 				// Main content
-				$child->add_static_content( '', $row['page' . $i . '_text'], 'right' );
+				$child->add_static_content( '', utf8_encode( $row['page' . $i . '_text'] ), 'right' );
 
 				// Slideshow, IF any of the facts are usable URLs. 
 				if( $row['pic' . $i . '_1'] || $row['pic' . $i . '_2'] || $row['pic' . $i . '_3'] ) {
@@ -121,7 +117,7 @@ foreach( $results as $row ){
 							str_replace( '_h', '_e', fix_source( $row['pic' . $i . '_1'] ) ),
 							null,
 							null,
-							$row['cap' . $i . '_1']
+							utf8_encode( $row['cap' . $i . '_1'] )
 						);
 					}
 					if( $row['pic' . $i . '_2'] ) {
@@ -129,7 +125,7 @@ foreach( $results as $row ){
 							str_replace( '_h', '_e', fix_source( $row['pic' . $i . '_2'] ) ),
 							null,
 							null,
-							$row['cap' . $i . '_2']
+							utf8_encode( $row['cap' . $i . '_2'] )
 						);
 					}
 					if( $row['pic' . $i . '_3'] ) {
@@ -137,7 +133,7 @@ foreach( $results as $row ){
 							str_replace( '_h', '_e', fix_source( $row['pic' . $i . '_3'] ) ),
 							null,
 							null,
-							$row['cap' . $i . '_3']
+							utf8_encode( $row['cap' . $i . '_3'] )
 						);
 					}
 				}
@@ -154,8 +150,8 @@ foreach( $results as $row ){
 			$activities = $act_query->fetchAll( PDO::FETCH_ASSOC );
 			$act_content = '';
 			foreach( $activities as $activity ) {
-				$act_content .= '<h6>' . $activity['title'] . '</h6>';
-				$act_content .= '<p>' . $activity['description'] . '</p>';
+				$act_content .= '<h6>' . utf8_encode( $activity['title'] ) . '</h6>';
+				$act_content .= '<p>' . utf8_encode( $activity['description'] ) . '</p>';
 			}
 
 			$act_page = new ModularPost( array(
@@ -190,17 +186,14 @@ foreach( $results as $row ){
 
 		case 'objif':
 
-			if( $row['volume'] !== 1 ){
-				break;
-			}
 			$format = 'Object in Focus';
 
 			// Root post
 			$mainpost = new ModularPost( array(
-				'post_title' => 'Teaching the Arts: Object in Focus: ' . $row['title'],
-				'post_name' => $row['title'],
+				'post_title' => 'Teaching the Arts: Object in Focus: ' . utf8_encode( $row['title'] ),
+				'post_name' => utf8_encode( $row['title'] ),
 				'post_type' => 'tta',
-				'post_excerpt' => $row['introduction'],
+				'post_excerpt' => utf8_encode( $row['introduction'] ),
 				'menu_order' => $row['volume'],
 			) );
 
@@ -214,14 +207,14 @@ foreach( $results as $row ){
 			$mainpost->add_image( fix_source( $row['object_pic'] ), null, null, 'left' );
 
 			// Main content
-			$mainpost->add_static_content( $row['title'], $row['object_cap'], 'right' );
+			$mainpost->add_static_content( utf8_encode( $row['title'] ), utf8_encode( $row['object_cap'] ), 'right' );
 
 			// Subpages
 			for( $i=1; $i<4; $i++ ) {
 
 				$child = new ModularPost( array(
-					'post_title' => '<span>KEY IDEA #' . $i . ':</span> ' . $row['page' . $i . '_title'],
-					'post_name' => $row['page' . $i . '_title'],
+					'post_title' => '<span>KEY IDEA #' . $i . ':</span> ' . utf8_encode( $row['page' . $i . '_title'] ),
+					'post_name' => utf8_encode( $row['page' . $i . '_title'] ),
 					'post_type' => 'tta',
 				) );
 
@@ -240,7 +233,7 @@ foreach( $results as $row ){
 							str_replace( '_h', '_e', fix_source( $row['pic' . $i . '_1'] ) ),
 							null,
 							null,
-							$row['cap' . $i . '_1']
+							utf8_encode( $row['cap' . $i . '_1'] )
 						);
 					}
 					if( $row['pic' . $i . '_2'] ) {
@@ -248,7 +241,7 @@ foreach( $results as $row ){
 							str_replace( '_h', '_e', fix_source( $row['pic' . $i . '_2'] ) ),
 							null,
 							null,
-							$row['cap' . $i . '_2']
+							utf8_encode( $row['cap' . $i . '_2'] )
 						);
 					}
 					if( $row['pic' . $i . '_3'] ) {
@@ -256,7 +249,7 @@ foreach( $results as $row ){
 							str_replace( '_h', '_e', fix_source( $row['pic' . $i . '_3'] ) ),
 							null,
 							null,
-							$row['cap' . $i . '_3']
+							utf8_encode( $row['cap' . $i . '_3'] )
 						);
 					}
 
@@ -266,7 +259,7 @@ foreach( $results as $row ){
 				}
 
 				// Main content
-				$child->add_static_content( 'KEY IDEA #' . $i . ': ' . $row['page' . $i . '_title'], $row['page' . $i . '_text'], 'right' );
+				$child->add_static_content( 'KEY IDEA #' . $i . ': ' . utf8_encode( $row['page' . $i . '_title'] ), utf8_encode( $row['page' . $i . '_text'] ), 'right' );
 
 				// Append to root page.
 				$mainpost->add_child( $child );
@@ -280,8 +273,8 @@ foreach( $results as $row ){
 			$activities = $act_query->fetchAll( PDO::FETCH_ASSOC );
 			$act_content = '';
 			foreach( $activities as $activity ) {
-				$act_content .= '<h6>' . $activity['title'] . '</h6>';
-				$act_content .= '<p>' . $activity['description'] . '</p>';
+				$act_content .= '<h6>' . utf8_encode( $activity['title'] ) . '</h6>';
+				$act_content .= '<p>' . utf8_encode( $activity['description'] ) . '</p>';
 			}
 
 			$act_page = new ModularPost( array(
