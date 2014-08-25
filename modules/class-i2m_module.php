@@ -28,6 +28,8 @@ abstract class I2M_Module {
 	 * Called just before get_postmeta_rows.
 	 *
 	 * @param int $new_id The ID of the newly created modular post.
+	 * @param arr $src_hash A hash of URLs to media IDs, so we don't download
+	 * anything more than once.
 	 */
 	public function before_publish( $new_id ) {}
 

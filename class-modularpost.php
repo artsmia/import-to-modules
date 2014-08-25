@@ -8,14 +8,14 @@
 class ModularPost { 
 
 	/**
-	 * The title of the post to be created.
+	 * An array of fields mapped to the posts table. 
+	 * $post['post_status'] and $post['post_parent'] may be overwritten when
+	 * calling ModularPost::publish. 
+	 *
+	 * See http://codex.wordpress.org/Function_Reference/wp_insert_post for all
+	 * available options.
 	 */
-	private $post_title;
-
-	/**
-	 * The post type of the post to be created.
-	 */
-	private $post_type;
+	private $post;
 
 	/**
 	 * The template (if post_type = page) for the page to be created.
@@ -26,6 +26,12 @@ class ModularPost {
 	 * The module containing the featured image for the page.
 	 */
 	private $featured_image;
+
+	/**
+	 * If featured image module is a slideshow, the slide containing the image to
+	 * feature.
+	 */
+	private $featured_image_slide;
 
 	/**
 	 * Whether this post is a subsite root.
@@ -163,9 +169,16 @@ class ModularPost {
 	 *
 	 * @param object $image_module The I2M_Module__image module containing the image
 	 */
-	function set_featured_image( $image_module = null ) {
-		if( $image_module && $image_module instanceof I2M_Module__image ) {
-			$this->featured_image = $image_module;
+	function set_featured_image( $module = null, $slide = null ) {
+		if( $module instanceof I2M_Module__image ) {
+			$this->featured_image = $module;
+		}
+		else if( $module instanceof I2M_Module__slideshow && $slide !== null && is_numeric( $slide ) ){
+			$this->featured_image = $module;
+			$this->featured_image_slide = $slide;
+		}
+		else{
+			echo "Invalid argument(s) passed to ModularPost::set_featured_image<br />";
 		}
 	}
 
@@ -189,29 +202,26 @@ class ModularPost {
 	 * @param int $parent_id Wordpress ID of the post this should be nested under.
 	 * @param string $post_status The status of the new post, i.e. 'draft' or 'private' or 'publish'
 	 */
-	function publish( $parent_id = null, $post_status = 'publish' ) {
+	function publish( $parent_id = null, $post_status = null ) {
 
 		global $wpdb;
-
-		$postdata = array(
-			'post_title' => $this->post_title,
-			'post_type' => $this->post_type,
-			'post_status' => 'publish',
-		);
+		global $src_hash;
 
 		// Add parent ID if specified
 		if( $parent_id ) {
-			$postdata[ 'post_parent' ] = $parent_id;
+			$this->post[ 'post_parent' ] = $parent_id;
 		}
+		
+		$this->post[ 'post_status' ] = $post_status ? $post_status : 'publish';
 
 		// Create post
-		$new_id = wp_insert_post( $postdata );
+		$new_id = wp_insert_post( $this->post );
 		if( ! $new_id ) {
 			die( 'Failed to insert post.' );
 		}
 
 		// Add template if specified
-		if( 'page' == $this->post_type && $this->post_template ) {
+		if( 'page' == $this->post['post_type'] && $this->post_template ) {
 			update_post_meta( $new_id, '_wp_page_template', $this->post_template );
 		}
 
@@ -243,8 +253,22 @@ class ModularPost {
 		}
 
 		if( ! empty( $this->featured_image ) ) {
-			$thumbnail_id = $this->featured_image->get_media_id();
-			update_post_meta( $new_id, '_thumbnail_id', $thumbnail_id );
+
+			// Get media ID
+			if( $this->featured_image instanceof I2M_Module__image ){
+				$thumbnail_id = $this->featured_image->get_media_id();
+			}
+			else if( $this->featured_image instanceof I2M_Module__slideshow ){
+				$thumbnail_id = $this->featured_image->get_media_id( $this->featured_image_slide );
+			}
+
+			// Set
+			if( $thumbnail_id ){
+				update_post_meta( $new_id, '_thumbnail_id', $thumbnail_id );
+			}
+			else{
+				echo "Error: Failed to update featured image for post " . $new_id . ".<br />";
+			}
 		}
 
 		// Loop through and publish children
@@ -259,10 +283,23 @@ class ModularPost {
 	/**
 	 * Set up object
 	 */
-	function __construct( $post_title = null, $post_type = 'page', $post_template = 'treatment.php' ) {
+	function __construct( $post, $post_template = 'treatment.php' ) {
 
-		$this->post_title = $post_title;
-		$this->post_type = $post_type;
+		global $src_hash;
+
+		if( empty( $src_hash ) ){
+			$src_hash = array();
+		}
+
+		if( ! is_array( $post) ){
+			die( "Error: ModularPost must be constructed with an array of post variables.<br />" );
+		}
+
+		if( ! array_key_exists( 'post_type', $post ) ){
+			$post['post_type'] = 'page';
+		}
+
+		$this->post = $post;
 		$this->post_template = $post_template;
 
 	}

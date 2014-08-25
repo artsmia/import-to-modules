@@ -15,6 +15,8 @@ class I2M_Module__image extends I2M_Module {
 
 	private $media_id;
 
+	private $fallback_id = 29824;
+
 	/**
 	 * Get media ID
 	 */
@@ -32,6 +34,18 @@ class I2M_Module__image extends I2M_Module {
 	 */
 	public function before_publish( $new_id ) {
 
+		global $src_hash;
+
+		if( ! $this->url ){
+			$this->media_id = $this->fallback_id;
+			return;
+		}
+
+		if( array_key_exists( $this->url, $src_hash ) ){
+			$this->media_id = $src_hash[ $this->url ];
+			return;
+		}
+
 		// Download image
 		$tmp = download_url( $this->url );
 		$file_array = array(
@@ -42,6 +56,9 @@ class I2M_Module__image extends I2M_Module {
 		// Check for download errors
 		if ( is_wp_error( $tmp ) ) {
 		  @unlink( $file_array[ 'tmp_name' ] );
+		  $this->media_id = $this->fallback_id;
+			$src_hash[ $this->url ] = $this->fallback_id;
+			return;
 		}
 
 		// Include caption if specified (WP stores this in the post_excerpt field)
@@ -55,8 +72,12 @@ class I2M_Module__image extends I2M_Module {
 		// Check for handle sideload errors.
 		if ( is_wp_error( $media_id ) ) {
 		  @unlink( $file_array['tmp_name'] );
+		  $this->media_id = $this->fallback_id;
+			$src_hash[ $this->url ] = $this->fallback_id;
+			return;
 		} else {
 			$this->media_id = $media_id;
+			$src_hash[ $this->url ] = $media_id;
 		}
 
 		// Add alt text if specified.

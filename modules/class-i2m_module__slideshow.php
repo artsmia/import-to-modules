@@ -11,6 +11,15 @@ class I2M_Module__slideshow extends I2M_Module {
 
 	public $slides;
 
+	private $fallback_id = 29824;
+
+	/**
+	 * Get media ID
+	 */
+	public function get_media_id( $slide ) {
+		return isset( $this->slides[ $slide ]['media_id'] ) ? $this->slides[ $slide ]['media_id'] : null;
+	}
+
 	private $options = array(
 
 		'controls' => null, 
@@ -76,11 +85,23 @@ class I2M_Module__slideshow extends I2M_Module {
 	 */
 	public function before_publish( $new_id ) {
 
+		global $src_hash;
+
 		foreach( $this->slides as $slide_index => $slide ) {
 
 			$url = $slide['url'];
 			$caption = $slide['caption'];
 			$alt = $slide['alt'];
+
+			if( ! $url ){
+				$this->slides[ $slide_index ]['media_id'] = $this->fallback_id;
+				continue;
+			}
+
+			if( array_key_exists( $slide['url'], $src_hash ) ){
+				$this->slides[ $slide_index ]['media_id'] = $src_hash[ $slide['url'] ];
+				continue;
+			}
 
 			// Download image
 			$tmp = download_url( $url );
@@ -92,6 +113,9 @@ class I2M_Module__slideshow extends I2M_Module {
 			// Check for download errors
 			if ( is_wp_error( $tmp ) ) {
 			  @unlink( $file_array['tmp_name'] );
+				$this->slides[ $slide_index ]['media_id'] = $this->fallback_id;
+				$src_hash[ $slide['url'] ] = $this->fallback_id;
+				continue;
 			}
 
 			// Include caption if specified (WP stores this in the post_excerpt field)
@@ -105,8 +129,12 @@ class I2M_Module__slideshow extends I2M_Module {
 			// Check for handle sideload errors.
 			if ( is_wp_error( $media_id ) ) {
 			  @unlink( $file_array['tmp_name'] );
+			  $this->slides[ $slide_index ]['media_id'] = $this->fallback_id;
+				$src_hash[ $slide['url'] ] = $this->fallback_id;
+				continue;
 			} else {
 				$this->slides[ $slide_index ]['media_id'] = $media_id;
+				$src_hash[ $slide['url'] ] = $media_id;
 			}
 
 			// Add alt text if specified.

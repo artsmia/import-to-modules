@@ -1,21 +1,41 @@
 <?php
 
+set_time_limit( 300 );
+
+/* -------------------------------------------------------------------------- *
+ * UTILITIES
+ * -------------------------------------------------------------------------- */
+
 function fix_source( $src ) {
+
+	// These URLs are broken - display fallback image as defined in module
+	if( 'http://zoom' == substr( $src, 0, 11 ) ){
+		return null;
+	}
+
 	$src = 'http' == substr( $src, 0, 4 ) ? $src : 'http://www.artsmia.org' . $src;
+
 	str_replace( '_h', '_e', $src );
-	str_replace( 'h_images', 'e_images', $src );
-	str_replace( 'h.jpg', 'e.jpg', $src );
+	str_replace( '-h', '-e', $src );
+
 	return $src;
 }
 
-function check_source( $src ) {
-	if( ! empty( $src ) && 'http://zoom' != substr( $src, 0, 11 ) ) {
-		return true;
-	}
-	return false;
-}
 
-// Main Query
+/* -------------------------------------------------------------------------- *
+ * GET TAX IDS
+ * -------------------------------------------------------------------------- */
+
+$ff_term = term_exists( 'Five Facts', 'tta_format' );
+$ff_term_id = $ff_term['term_id'];
+$oif_term = term_exists( 'Object in Focus', 'tta_format' );
+$oif_term_id = $oif_term['term_id'];
+
+
+/* -------------------------------------------------------------------------- *
+ * MAIN QUERY
+ * -------------------------------------------------------------------------- */
+
 $host = ARTSMIA_DB_HOST;
 $dbname = ARTSMIA_TTA_NAME;
 $user = ARTSMIA_TTA_USER;
@@ -27,93 +47,259 @@ try{
 	echo "Connection failed: ".$e->getMessage();
 	die;
 }
-$main_query=$dbh->prepare("SELECT * FROM newsletters WHERE volume='185'");
+$main_query=$dbh->prepare("SELECT * FROM newsletters WHERE publish='1'");
 $main_query->execute();
-$results = $main_query->fetch(PDO::FETCH_ASSOC);
+$results = $main_query->fetchAll(PDO::FETCH_ASSOC);
+
+foreach( $results as $row ){
+
+	switch( $row['template'] ){
 
 
-// Root post
-$mainpost = new ModularPost( 'Five Facts: ' . $results['title'], 'tta' );
+		/* ---------------------------------------------------------------------- *
+		 * FIVE FACTS
+		 * ---------------------------------------------------------------------- */
 
-// Define as root of this group of Five Facts pages
-$mainpost->set_subsite_root();
+		case '5facts':
 
-// Facts carousel
-$mainpost->add_carousel( 'children' );
+			$format = 'Five Facts';
 
-// Title
-$mainpost->add_static_content( '', '<h1>' . $results['title'] . '</h1>', 'full' );
+			// Root post
+			$mainpost = new ModularPost( array(
+				'post_title' => 'Teaching the Arts: Five Facts: ' . $row['title'],
+				'post_name' => $row['title'],
+				'post_type' => 'tta',
+				'post_excerpt' => $row['introduction'],
+				'menu_order' => $row['volume'],
+			) );
 
-// Main content
-$mainpost->add_static_content( '', $results['introduction'] );
+			// Define as root of this group of Five Facts pages
+			$mainpost->set_subsite_root();
 
-// Subpages
-for( $i=1; $i<6; $i++ ) {
+			// Facts carousel
+			$mainpost->add_carousel( 'children' );
 
-	$child = new ModularPost( '<span>FACT #' . $i . ':</span> ' . $results['page' . $i . '_title'], 'tta' );
+			// Title
+			$mainpost->add_static_content( '', '<h1>' . $row['title'] . '</h1>', 'full' );
 
-	// Facts carousel
-	$child->add_carousel( 'inherit' );
+			// Main content
+			$mainpost->add_static_content( '', $row['introduction'] );
 
-	// Page title
-	$child->add_static_content( '', '<h1>FACT #' . $i . ': ' . $results['page' . $i . '_title'] . '</h1>', 'full' );
+			// Subpages
+			for( $i=1; $i<6; $i++ ) {
 
-	// Main image
-	$child_featured = $child->add_image( fix_source( $results['page' . $i . '_pic'] ), $results['page' . $i . '_cap'], null, 'left' );
-	// Now that we've created the image module, save as featured image
-	$child->set_featured_image( $child_featured );
+				$child = new ModularPost( array(
+					'post_title' => '<span>FACT #' . $i . ':</span> ' . $row['page' . $i . '_title'],
+					'post_name' => $row['page' . $i . '_title'],
+					'post_type' => 'tta' 
+				) );
 
-	// Main content
-	$child->add_static_content( '', $results['page' . $i . '_text'], 'right' );
+				// Facts carousel
+				$child->add_carousel( 'inherit' );
 
-	// Slideshow, IF any of the facts are usable URLs. 
-	if( check_source( $results['pic' . $i . '_1'] ) || check_source( $results['pic' . $i . '_2'] ) || check_source( $results['pic' . $i . '_3'] ) ) {
-		$child_slideshow = $child->add_slideshow();
-		$child_slideshow->set_option( 'height', 450 );
-		if( check_source( $results['pic' . $i . '_1'] ) ) {
-			$child_slideshow->add_slide(
-				str_replace( '_h', '_e', fix_source( $results['pic' . $i . '_1'] ) ),
-				null,
-				null,
-				$results['cap' . $i . '_1']
-			);
-		}
-		if( check_source( $results['pic' . $i . '_2'] ) ) {
-			$child_slideshow->add_slide(
-				str_replace( '_h', '_e', fix_source( $results['pic' . $i . '_2'] ) ),
-				null,
-				null,
-				$results['cap' . $i . '_2']
-			);
-		}
-		if( check_source( $results['pic' . $i . '_3'] ) ) {
-			$child_slideshow->add_slide(
-				str_replace( '_h', '_e', fix_source( $results['pic' . $i . '_3'] ) ),
-				null,
-				null,
-				$results['cap' . $i . '_3']
-			);
-		}
+				// Page title
+				$child->add_static_content( '', '<h1>FACT #' . $i . ': ' . $row['page' . $i . '_title'] . '</h1>', 'full' );
+
+				// Main image
+				$child_featured = $child->add_image( fix_source( $row['page' . $i . '_pic'] ), $row['page' . $i . '_cap'], null, 'left' );
+				// Now that we've created the image module, save as featured image
+				$child->set_featured_image( $child_featured );
+
+				// Main content
+				$child->add_static_content( '', $row['page' . $i . '_text'], 'right' );
+
+				// Slideshow, IF any of the facts are usable URLs. 
+				if( $row['pic' . $i . '_1'] || $row['pic' . $i . '_2'] || $row['pic' . $i . '_3'] ) {
+					$child_slideshow = $child->add_slideshow();
+					$child_slideshow->set_option( 'height', 450 );
+					if( $row['pic' . $i . '_1'] ) {
+						$child_slideshow->add_slide(
+							str_replace( '_h', '_e', fix_source( $row['pic' . $i . '_1'] ) ),
+							null,
+							null,
+							$row['cap' . $i . '_1']
+						);
+					}
+					if( $row['pic' . $i . '_2'] ) {
+						$child_slideshow->add_slide(
+							str_replace( '_h', '_e', fix_source( $row['pic' . $i . '_2'] ) ),
+							null,
+							null,
+							$row['cap' . $i . '_2']
+						);
+					}
+					if( $row['pic' . $i . '_3'] ) {
+						$child_slideshow->add_slide(
+							str_replace( '_h', '_e', fix_source( $row['pic' . $i . '_3'] ) ),
+							null,
+							null,
+							$row['cap' . $i . '_3']
+						);
+					}
+				}
+
+				// Append to root page.
+				$mainpost->add_child( $child );
+
+			}
+
+			// Activities Query
+
+			$act_query=$dbh->prepare("SELECT * FROM related_activities WHERE volume=?");
+			$act_query->execute( array( $row['volume'] ) );
+			$activities = $act_query->fetchAll( PDO::FETCH_ASSOC );
+			$act_content = '';
+			foreach( $activities as $activity ) {
+				$act_content .= '<h6>' . $activity['title'] . '</h6>';
+				$act_content .= '<p>' . $activity['description'] . '</p>';
+			}
+
+			$act_page = new ModularPost( array(
+				'post_title' => 'Related Activities', 
+				'post_type' => 'tta' 
+			) );
+
+			$act_page->add_carousel( 'inherit' );
+
+			$act_page->add_static_content( 'Related Activities', $act_content, 'center' );
+
+			$mainpost->add_child( $act_page );
+
+			// Publish
+			$new_id = $mainpost->publish();
+
+			// Set terms
+			wp_set_post_terms( $new_id, $ff_term_id, 'tta_format' );
+
+			// Add additional metadata
+			update_post_meta( $new_id, 'tta_vol_date', $row['voldate'] );
+			update_post_meta( $new_id, 'tta_vol_id', $row['volume'] );
+
+			echo "<p>Created a new " . $format . " post from Volume " . $row['volume'] . ". <a href='/wp-admin/post.php?post=" . $new_id . "&action=edit'>Edit</a> or <a href='" . get_permalink( $new_id ) . "'>view</a> it now.</p>";
+
+			break;
+
+
+		/* ---------------------------------------------------------------------- *
+		 * OBJECT IN FOCUS
+		 * ---------------------------------------------------------------------- */
+
+		case 'objif':
+
+			$format = 'Object in Focus';
+
+			// Root post
+			$mainpost = new ModularPost( array(
+				'post_title' => 'Teaching the Arts: Object in Focus: ' . $row['title'],
+				'post_name' => $row['title'],
+				'post_type' => 'tta',
+				'post_excerpt' => $row['introduction'],
+				'menu_order' => $row['volume'],
+			) );
+
+			// Define as root of this group of Five Facts pages
+			$mainpost->set_subsite_root();
+
+			// Facts carousel
+			$mainpost->add_carousel( 'children' );
+
+			// Main Image
+			$mainpost->add_image( fix_source( $row['object_pic'] ), null, null, 'left' );
+
+			// Main content
+			$mainpost->add_static_content( $row['title'], $row['object_cap'], 'right' );
+
+			// Subpages
+			for( $i=1; $i<4; $i++ ) {
+
+				$child = new ModularPost( array(
+					'post_title' => '<span>KEY IDEA #' . $i . ':</span> ' . $row['page' . $i . '_title'],
+					'post_name' => $row['page' . $i . '_title'],
+					'post_type' => 'tta',
+				) );
+
+				// Facts carousel
+				$child->add_carousel( 'inherit' );
+
+				// Main image
+				$child->add_image( fix_source( $row['object_pic'] ), null, null, 'left' );
+
+				// Slideshow, IF any of the supporting images are usable URLs. 
+				if( $row['pic' . $i . '_1'] || $row['pic' . $i . '_2'] || $row['pic' . $i . '_3'] ) {
+					$child_slideshow = $child->add_slideshow( null, null, 'left' );
+					$child_slideshow->set_option( 'height', 450 );
+					if( $row['pic' . $i . '_1'] ) {
+						$child_slideshow->add_slide(
+							str_replace( '_h', '_e', fix_source( $row['pic' . $i . '_1'] ) ),
+							null,
+							null,
+							$row['cap' . $i . '_1']
+						);
+					}
+					if( $row['pic' . $i . '_2'] ) {
+						$child_slideshow->add_slide(
+							str_replace( '_h', '_e', fix_source( $row['pic' . $i . '_2'] ) ),
+							null,
+							null,
+							$row['cap' . $i . '_2']
+						);
+					}
+					if( $row['pic' . $i . '_3'] ) {
+						$child_slideshow->add_slide(
+							str_replace( '_h', '_e', fix_source( $row['pic' . $i . '_3'] ) ),
+							null,
+							null,
+							$row['cap' . $i . '_3']
+						);
+					}
+
+					// Use first image in slideshow for featured image, so it's not the 
+					// object in focus every time.
+					$child->set_featured_image( $child_slideshow, 0 );
+				}
+
+				// Main content
+				$child->add_static_content( 'KEY IDEA #' . $i . ': ' . $row['page' . $i . '_title'], $row['page' . $i . '_text'], 'right' );
+
+				// Append to root page.
+				$mainpost->add_child( $child );
+
+			}
+
+			// Activities Query
+
+			$act_query=$dbh->prepare("SELECT * FROM related_activities WHERE volume=?");
+			$act_query->execute( array( $row['volume'] ) );
+			$activities = $act_query->fetchAll( PDO::FETCH_ASSOC );
+			$act_content = '';
+			foreach( $activities as $activity ) {
+				$act_content .= '<h6>' . $activity['title'] . '</h6>';
+				$act_content .= '<p>' . $activity['description'] . '</p>';
+			}
+
+			$act_page = new ModularPost( array(
+				'post_title' => 'Related Activities',
+				'post_type' => 'tta',
+			) );
+
+			$act_page->add_carousel( 'inherit' );
+
+			$act_page->add_static_content( 'Related Activities', $act_content, 'center' );
+
+			$mainpost->add_child( $act_page );
+
+			// Publish
+			$new_id = $mainpost->publish();
+
+			// Set terms
+			wp_set_post_terms( $new_id, $oif_term_id, 'tta_format' );
+
+			// Add additional metadata
+			update_post_meta( $new_id, 'tta_vol_date', $row['voldate'] );
+			update_post_meta( $new_id, 'tta_vol_id', $row['volume'] );
+
+			echo "<p>Created a new " . $format . " post from Volume " . $row['volume'] . ". <a href='/wp-admin/post.php?post=" . $new_id . "&action=edit'>Edit</a> or <a href='" . get_permalink( $new_id ) . "'>view</a> it now.</p>";
+
+			break;	
 	}
-
-	// Append to root page.
-	$mainpost->add_child( $child );
-
 }
-
-// Activities Query
-
-$act_query=$dbh->prepare("SELECT * FROM related_activities WHERE volume='185'");
-$act_query->execute();
-$activities = $act_query->fetchAll(PDO::FETCH_ASSOC);
-$act_content = '';
-foreach( $activities as $activity ) {
-	$act_content .= '<h6>' . $activity['title'] . '</h6>';
-	$act_content .= '<p>' . $activity['description'] . '</p>';
-}
-$mainpost->add_static_content( 'Related Activities', $act_content, 'center' );
-
-// Publish
-$new_id = $mainpost->publish();
-
-echo "<p>Your new post has been created. <a href='/wp-admin/post.php?post=" . $new_id . "&action=edit'>Edit</a> or <a href='" . get_permalink( $new_id ) . "'>view</a> it now.</p>";
